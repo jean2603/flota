@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consulta de Documentos</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #fdfdfd;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #800000;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+    main {
+      padding: 2rem;
+      max-width: 800px;
+      margin: auto;
+    }
+    select, button {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #800000;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #a00000;
+    }
+    .documento {
+      background-color: #f0f0f0;
+      padding: 1rem;
+      border-radius: 5px;
+      margin-bottom: 1rem;
+    }
+    .nav {
+      text-align: center;
+      margin-top: 2rem;
+    }
+    .nav a {
+      background-color: #800000;
+      color: white;
+      padding: 0.5rem 1rem;
+      text-decoration: none;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Consulta de Documentos</h1>
+  </header>
+  <main>
+    <label for="placaConsulta">Seleccione una Placa:</label>
+    <select id="placaConsulta"></select>
+    <button onclick="mostrarDocumentos()">Mostrar Documentos</button>
+
+    <div id="resultados"></div>
+
+    <div class="nav">
+      <a href="index.html">Regresar</a>
+    </div>
+  </main>
+
+  <script>
+    let db = JSON.parse(localStorage.getItem('vehiculosDB')) || {};
+
+    function cargarPlacas() {
+      const select = document.getElementById('placaConsulta');
+      select.innerHTML = '';
+      for (let placa in db) {
+        const option = document.createElement('option');
+        option.value = placa;
+        option.textContent = placa;
+        select.appendChild(option);
+      }
+    }
+
+    function mostrarDocumentos() {
+      const placa = document.getElementById('placaConsulta').value;
+      const contenedor = document.getElementById('resultados');
+      contenedor.innerHTML = `<h2>Documentos de ${placa}</h2>`;
+
+      if (db[placa] && db[placa].length > 0) {
+        db[placa].forEach(doc => {
+          const div = document.createElement('div');
+          div.className = 'documento';
+          div.innerHTML = `<strong>Tipo:</strong> ${doc.tipo}<br><strong>Fecha Vencimiento:</strong> ${doc.fecha}<br><strong>Detalle:</strong> ${doc.detalle || 'Sin detalle'}`;
+          contenedor.appendChild(div);
+        });
+      } else {
+        contenedor.innerHTML += '<p>No hay documentos registrados para esta placa.</p>';
+      }
+    }
+
+    window.onload = cargarPlacas;
+  </script>
+</body>
+</html>
+
+
