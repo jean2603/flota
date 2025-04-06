@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro de Vehículos</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9f9f9;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #800000;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+    main {
+      padding: 2rem;
+      max-width: 800px;
+      margin: auto;
+    }
+    section {
+      margin-bottom: 2rem;
+    }
+    label {
+      display: block;
+      margin: 0.5rem 0 0.2rem;
+    }
+    input, select, textarea, button {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+    button {
+      background-color: #800000;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #a00000;
+    }
+    .nav {
+      margin-top: 2rem;
+      text-align: center;
+    }
+    .nav a {
+      background-color: #800000;
+      color: white;
+      padding: 0.5rem 1rem;
+      text-decoration: none;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Registro de Vehículos</h1>
+  </header>
+  <main>
+    <section>
+      <h2>Registrar Placa</h2>
+      <input type="text" id="placa" placeholder="Ingrese la placa del vehículo">
+      <button onclick="registrarPlaca()">Registrar Placa</button>
+    </section>
+
+    <section>
+      <h2>Registrar Documento</h2>
+      <label for="placaDoc">Seleccione Placa:</label>
+      <select id="placaDoc"></select>
+      <label for="tipo">Tipo de Documento:</label>
+      <input type="text" id="tipo" placeholder="Ej. SOAT, Técnico">
+      <label for="fecha">Fecha de Vencimiento:</label>
+      <input type="date" id="fecha">
+      <label for="detalle">Detalle:</label>
+      <textarea id="detalle" placeholder="Descripción adicional del documento"></textarea>
+      <button onclick="registrarDocumento()">Registrar Documento</button>
+    </section>
+
+    <div class="nav">
+      <a href="consulta.html">Ir a Consulta</a>
+    </div>
+  </main>
+
+  <script>
+    let db = JSON.parse(localStorage.getItem('vehiculosDB')) || {};
+
+    function registrarPlaca() {
+      const placa = document.getElementById('placa').value.toUpperCase().trim();
+      if (placa && !db[placa]) {
+        db[placa] = [];
+        guardarDB();
+        alert("Placa registrada con éxito");
+        actualizarSelectPlacas();
+      } else {
+        alert("Placa inválida o ya registrada");
+      }
+      document.getElementById('placa').value = '';
+    }
+
+    function registrarDocumento() {
+      const placa = document.getElementById('placaDoc').value;
+      const tipo = document.getElementById('tipo').value;
+      const fecha = document.getElementById('fecha').value;
+      const detalle = document.getElementById('detalle').value;
+
+      if (placa && tipo && fecha) {
+        db[placa].push({ tipo, fecha, detalle });
+        guardarDB();
+        alert("Documento registrado correctamente");
+        document.getElementById('tipo').value = '';
+        document.getElementById('fecha').value = '';
+        document.getElementById('detalle').value = '';
+      } else {
+        alert("Complete todos los campos requeridos");
+      }
+    }
+
+    function guardarDB() {
+      localStorage.setItem('vehiculosDB', JSON.stringify(db));
+    }
+
+    function actualizarSelectPlacas() {
+      const select = document.getElementById('placaDoc');
+      select.innerHTML = '';
+      for (let placa in db) {
+        const option = document.createElement('option');
+        option.value = placa;
+        option.textContent = placa;
+        select.appendChild(option);
+      }
+    }
+
+    window.onload = actualizarSelectPlacas;
+  </script>
+</body>
+</html>
+
+
+
