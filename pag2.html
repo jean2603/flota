@@ -74,6 +74,33 @@
     button.delete:hover {
       background-color: darkred;
     }
+    .estado {
+      font-weight: bold;
+      border-radius: 4px;
+      padding: 0.3rem 0.6rem;
+    }
+    .vigente {
+      color: #155724;
+      background-color: #d4edda;
+    }
+    .vencido {
+      color: #721c24;
+      background-color: #f8d7da;
+    }
+    .btn-salir {
+      background-color: #800000;
+      color: white;
+      padding: 0.6rem 1.5rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background-color 0.3s;
+      text-decoration: none;
+    }
+    .btn-salir:hover {
+      background-color: #a30000;
+    }
   </style>
 </head>
 <body>
@@ -100,6 +127,9 @@
 
     <div class="nav">
       <a href="registro.html">Volver al Registro</a>
+    </div>
+    <div class="nav">
+      <a href="index.html" class="btn-salir">Salir</a>
     </div>
   </main>
 
