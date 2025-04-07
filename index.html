@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Registro de Vehículos</title>
   <style>
     body {
@@ -89,32 +89,59 @@
     </div>
   </main>
 
-  <script>
-    let db = JSON.parse(localStorage.getItem('vehiculosDB')) || {};
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 
-    function registrarPlaca() {
+  <script>
+    // Tu configuración de Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyD4jXuHsXsK2eP6wnWIpbyQ2oC-vWNLnn0",
+      authDomain: "flota-fcg.firebaseapp.com",
+      projectId: "flota-fcg",
+      storageBucket: "flota-fcg.firebasestorage.app",
+      messagingSenderId: "1028149868248",
+      appId: "1:1028149868248:web:95a63df6dcd1f4007f49ad",
+      measurementId: "G-YDSZTH1LXF"
+    };
+
+    // Inicializar Firebase y Firestore
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    async function registrarPlaca() {
       const placa = document.getElementById('placa').value.toUpperCase().trim();
-      if (placa && !db[placa]) {
-        db[placa] = [];
-        guardarDB();
+      if (!placa) {
+        alert("Ingrese una placa válida");
+        return;
+      }
+
+      const doc = await db.collection("vehiculos").doc(placa).get();
+      if (doc.exists) {
+        alert("La placa ya está registrada");
+      } else {
+        await db.collection("vehiculos").doc(placa).set({ documentos: [] });
         alert("Placa registrada con éxito");
         actualizarSelectPlacas();
-      } else {
-        alert("Placa inválida o ya registrada");
       }
+
       document.getElementById('placa').value = '';
     }
 
-    function registrarDocumento() {
+    async function registrarDocumento() {
       const placa = document.getElementById('placaDoc').value;
-      const tipo = document.getElementById('tipo').value;
+      const tipo = document.getElementById('tipo').value.trim();
       const fecha = document.getElementById('fecha').value;
-      const detalle = document.getElementById('detalle').value;
+      const detalle = document.getElementById('detalle').value.trim();
 
       if (placa && tipo && fecha) {
-        db[placa].push({ tipo, fecha, detalle });
-        guardarDB();
+        const docRef = db.collection("vehiculos").doc(placa);
+        const doc = await docRef.get();
+        const datos = doc.data();
+        datos.documentos.push({ tipo, fecha, detalle });
+        await docRef.set(datos);
         alert("Documento registrado correctamente");
+
         document.getElementById('tipo').value = '';
         document.getElementById('fecha').value = '';
         document.getElementById('detalle').value = '';
@@ -123,19 +150,16 @@
       }
     }
 
-    function guardarDB() {
-      localStorage.setItem('vehiculosDB', JSON.stringify(db));
-    }
-
-    function actualizarSelectPlacas() {
+    async function actualizarSelectPlacas() {
       const select = document.getElementById('placaDoc');
       select.innerHTML = '';
-      for (let placa in db) {
+      const snapshot = await db.collection("vehiculos").get();
+      snapshot.forEach(doc => {
         const option = document.createElement('option');
-        option.value = placa;
-        option.textContent = placa;
+        option.value = doc.id;
+        option.textContent = doc.id;
         select.appendChild(option);
-      }
+      });
     }
 
     window.onload = actualizarSelectPlacas;
