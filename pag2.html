@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Consulta de Documentos</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Consulta de Vehículos</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #fdfdfd;
+      background-color: #f4f4f4;
       color: #333;
       margin: 0;
       padding: 0;
@@ -20,31 +20,37 @@
     }
     main {
       padding: 2rem;
-      max-width: 800px;
+      max-width: 1000px;
       margin: auto;
     }
-    select, button {
-      width: 100%;
-      padding: 0.5rem;
-      margin-bottom: 1rem;
-      font-size: 1rem;
-      border-radius: 5px;
-      border: 1px solid #ccc;
+    h2 {
+      margin-top: 0;
     }
-    button {
+    select {
+      padding: 0.5rem;
+      font-size: 1rem;
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 0.75rem;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+    th {
       background-color: #800000;
       color: white;
-      border: none;
-      cursor: pointer;
     }
-    button:hover {
-      background-color: #a00000;
-    }
-    .documento {
-      background-color: #f0f0f0;
-      padding: 1rem;
-      border-radius: 5px;
-      margin-bottom: 1rem;
+    tr:hover {
+      background-color: #f1f1f1;
     }
     .nav {
       text-align: center;
@@ -57,53 +63,124 @@
       text-decoration: none;
       border-radius: 5px;
     }
+    button.delete {
+      background-color: red;
+      color: white;
+      padding: 0.5rem 1rem;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    button.delete:hover {
+      background-color: darkred;
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>Consulta de Documentos</h1>
+    <h1>Consulta de Vehículos</h1>
   </header>
   <main>
-    <label for="placaConsulta">Seleccione una Placa:</label>
-    <select id="placaConsulta"></select>
-    <button onclick="mostrarDocumentos()">Mostrar Documentos</button>
+    <h2>Selecciona una Placa</h2>
+    <select id="placaSelect" onchange="mostrarDocumentos()"></select>
 
-    <div id="resultados"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Tipo</th>
+          <th>Fecha de Vencimiento</th>
+          <th>Detalle</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody id="tablaDocumentos">
+        <tr><td colspan="4">Seleccione una placa para ver los documentos</td></tr>
+      </tbody>
+    </table>
 
     <div class="nav">
-      <a href="index.html">Regresar</a>
+      <a href="index.html">Volver al Registro</a>
     </div>
   </main>
 
-  <script>
-    let db = JSON.parse(localStorage.getItem('vehiculosDB')) || {};
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 
-    function cargarPlacas() {
-      const select = document.getElementById('placaConsulta');
-      select.innerHTML = '';
-      for (let placa in db) {
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyD4jXuHsXsK2eP6wnWIpbyQ2oC-vWNLnn0",
+      authDomain: "flota-fcg.firebaseapp.com",
+      projectId: "flota-fcg",
+      storageBucket: "flota-fcg.firebasestorage.app",
+      messagingSenderId: "1028149868248",
+      appId: "1:1028149868248:web:95a63df6dcd1f4007f49ad",
+      measurementId: "G-YDSZTH1LXF"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    async function cargarPlacas() {
+      const select = document.getElementById('placaSelect');
+      const snapshot = await db.collection("vehiculos").get();
+      snapshot.forEach(doc => {
         const option = document.createElement('option');
-        option.value = placa;
-        option.textContent = placa;
+        option.value = doc.id;
+        option.textContent = doc.id;
         select.appendChild(option);
-      }
+      });
     }
 
-    function mostrarDocumentos() {
-      const placa = document.getElementById('placaConsulta').value;
-      const contenedor = document.getElementById('resultados');
-      contenedor.innerHTML = `<h2>Documentos de ${placa}</h2>`;
+    async function mostrarDocumentos() {
+      const placa = document.getElementById('placaSelect').value;
+      const tbody = document.getElementById('tablaDocumentos');
+      tbody.innerHTML = '';
 
-      if (db[placa] && db[placa].length > 0) {
-        db[placa].forEach(doc => {
-          const div = document.createElement('div');
-          div.className = 'documento';
-          div.innerHTML = `<strong>Tipo:</strong> ${doc.tipo}<br><strong>Fecha Vencimiento:</strong> ${doc.fecha}<br><strong>Detalle:</strong> ${doc.detalle || 'Sin detalle'}`;
-          contenedor.appendChild(div);
-        });
-      } else {
-        contenedor.innerHTML += '<p>No hay documentos registrados para esta placa.</p>';
+      if (!placa) return;
+
+      const docRef = db.collection("vehiculos").doc(placa);
+      const doc = await docRef.get();
+
+      if (!doc.exists) {
+        tbody.innerHTML = '<tr><td colspan="4">No se encontraron documentos</td></tr>';
+        return;
       }
+
+      const documentos = doc.data().documentos || [];
+
+      if (documentos.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4">No hay documentos registrados para esta placa</td></tr>';
+        return;
+      }
+
+      documentos.forEach((doc, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${doc.tipo}</td>
+          <td>${doc.fecha}</td>
+          <td>${doc.detalle}</td>
+          <td><button class="delete" onclick="eliminarDocumento('${placa}', ${index})">Eliminar</button></td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    async function eliminarDocumento(placa, index) {
+      const docRef = db.collection("vehiculos").doc(placa);
+      const doc = await docRef.get();
+      const documentos = doc.data().documentos || [];
+
+      // Eliminar el documento correspondiente
+      documentos.splice(index, 1);
+
+      // Actualizar la base de datos
+      await docRef.set({
+        documentos: documentos
+      });
+
+      alert("Documento eliminado correctamente");
+      mostrarDocumentos();  // Actualiza la tabla
     }
 
     window.onload = cargarPlacas;
