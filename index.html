@@ -1,168 +1,124 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Registro de Vehículos</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #f9f9f9;
       color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
       margin: 0;
-      padding: 0;
+    }
+    .login-container {
+      background-color: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
     }
     header {
       background-color: #800000;
       color: white;
       padding: 1rem;
-      text-align: center;
+      border-radius: 10px 10px 0 0;
     }
-    main {
-      padding: 2rem;
-      max-width: 800px;
-      margin: auto;
-    }
-    section {
-      margin-bottom: 2rem;
-    }
-    label {
-      display: block;
-      margin: 0.5rem 0 0.2rem;
-    }
-    input, select, textarea, button {
+    input {
       width: 100%;
-      padding: 0.5rem;
-      margin-bottom: 1rem;
+      padding: 0.8rem;
+      margin-bottom: 1.5rem;
       border: 1px solid #ccc;
       border-radius: 5px;
       font-size: 1rem;
     }
     button {
+      width: 100%;
+      padding: 0.8rem;
       background-color: #800000;
       color: white;
       border: none;
+      border-radius: 5px;
       cursor: pointer;
+      font-size: 1rem;
     }
     button:hover {
       background-color: #a00000;
     }
-    .nav {
-      margin-top: 2rem;
-      text-align: center;
+    .logo {
+      margin-bottom: 1.5rem;
+      width: 50%;
     }
-    .nav a {
-      background-color: #800000;
-      color: white;
-      padding: 0.5rem 1rem;
+    .footer {
+      margin-top: 1.5rem;
+      font-size: 0.9rem;
+      color: #777;
+    }
+    .footer a {
       text-decoration: none;
+      color: #800000;
+    }
+    .footer button {
+      width: 100%;
+      padding: 0.8rem;
+      background-color: #777;
+      color: white;
+      border: none;
       border-radius: 5px;
+      cursor: pointer;
+    }
+    .footer button:hover {
+      background-color: #555;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Registro de Vehículos</h1>
-  </header>
-  <main>
-    <section>
-      <h2>Registrar Placa</h2>
-      <input type="text" id="placa" placeholder="Ingrese la placa del vehículo">
-      <button onclick="registrarPlaca()">Registrar Placa</button>
-    </section>
-
-    <section>
-      <h2>Registrar Documento</h2>
-      <label for="placaDoc">Seleccione Placa:</label>
-      <select id="placaDoc"></select>
-      <label for="tipo">Tipo de Documento:</label>
-      <input type="text" id="tipo" placeholder="Ej. SOAT, Técnico">
-      <label for="fecha">Fecha de Vencimiento:</label>
-      <input type="date" id="fecha">
-      <label for="detalle">Detalle:</label>
-      <textarea id="detalle" placeholder="Descripción adicional del documento"></textarea>
-      <button onclick="registrarDocumento()">Registrar Documento</button>
-    </section>
-
-    <div class="nav">
-      <a href="pag2.html">Ir a Consulta</a>
+  <div class="login-container">
+    <header>
+      <img src="logo.png" alt="Logo" class="logo" />
+      <h2>Iniciar Sesión</h2>
+    </header>
+    <form id="loginForm">
+      <input type="text" id="usuario" placeholder="Usuario" required>
+      <input type="password" id="clave" placeholder="Contraseña" required>
+      <button type="submit">Ingresar</button>
+    </form>
+    
+    <!-- Botón de invitado -->
+    <div class="footer">
+      <button id="btnInvitado" onclick="ingresarComoInvitado()">Ingresar como Invitado</button>
     </div>
-  </main>
-
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+  </div>
 
   <script>
-    // Tu configuración de Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyD4jXuHsXsK2eP6wnWIpbyQ2oC-vWNLnn0",
-      authDomain: "flota-fcg.firebaseapp.com",
-      projectId: "flota-fcg",
-      storageBucket: "flota-fcg.firebasestorage.app",
-      messagingSenderId: "1028149868248",
-      appId: "1:1028149868248:web:95a63df6dcd1f4007f49ad",
-      measurementId: "G-YDSZTH1LXF"
-    };
+    const loginForm = document.getElementById('loginForm');
 
-    // Inicializar Firebase y Firestore
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    loginForm.addEventListener('submit', function(e) {
+      e.preventDefault();
 
-    async function registrarPlaca() {
-      const placa = document.getElementById('placa').value.toUpperCase().trim();
-      if (!placa) {
-        alert("Ingrese una placa válida");
-        return;
-      }
+      const usuario = document.getElementById('usuario').value;
+      const clave = document.getElementById('clave').value;
 
-      const doc = await db.collection("vehiculos").doc(placa).get();
-      if (doc.exists) {
-        alert("La placa ya está registrada");
+      if (usuario === 'admin' && clave === 'FCG1234') {
+        // Si las credenciales son correctas
+        localStorage.setItem('usuario', 'admin');
+        window.location.href = 'registro.html';
       } else {
-        await db.collection("vehiculos").doc(placa).set({ documentos: [] });
-        alert("Placa registrada con éxito");
-        actualizarSelectPlacas();
+        // Si las credenciales no son correctas
+        alert('Credenciales incorrectas. Ingresa como invitado si lo deseas.');
       }
+    });
 
-      document.getElementById('placa').value = '';
+    function ingresarComoInvitado() {
+      localStorage.setItem('usuario', 'invitado');
+      window.location.href = 'pag3.html'; // Redirige a la página como invitado
     }
-
-    async function registrarDocumento() {
-      const placa = document.getElementById('placaDoc').value;
-      const tipo = document.getElementById('tipo').value.trim();
-      const fecha = document.getElementById('fecha').value;
-      const detalle = document.getElementById('detalle').value.trim();
-
-      if (placa && tipo && fecha) {
-        const docRef = db.collection("vehiculos").doc(placa);
-        const doc = await docRef.get();
-        const datos = doc.data();
-        datos.documentos.push({ tipo, fecha, detalle });
-        await docRef.set(datos);
-        alert("Documento registrado correctamente");
-
-        document.getElementById('tipo').value = '';
-        document.getElementById('fecha').value = '';
-        document.getElementById('detalle').value = '';
-      } else {
-        alert("Complete todos los campos requeridos");
-      }
-    }
-
-    async function actualizarSelectPlacas() {
-      const select = document.getElementById('placaDoc');
-      select.innerHTML = '';
-      const snapshot = await db.collection("vehiculos").get();
-      snapshot.forEach(doc => {
-        const option = document.createElement('option');
-        option.value = doc.id;
-        option.textContent = doc.id;
-        select.appendChild(option);
-      });
-    }
-
-    window.onload = actualizarSelectPlacas;
   </script>
 </body>
 </html>
