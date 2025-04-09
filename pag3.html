@@ -7,7 +7,7 @@
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #fdfcfc;
+      background-color: #bebebe;
       color: #333;
       margin: 0;
       padding: 0;
@@ -68,6 +68,10 @@
     .vencido {
       color: #721c24;
       background-color: #f8d7da;
+    }
+    .alerta {
+      background-color: #f8d7da !important;
+      color: #721c24 !important;
     }
     .nav {
       text-align: center;
@@ -183,6 +187,9 @@
         return;
       }
 
+      // Ordenar documentos por fecha de vencimiento
+      documentos.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
       documentos.forEach(doc => {
         const estadoHTML = calcularEstado(doc.fecha);
         const row = document.createElement('tr');
@@ -192,6 +199,13 @@
           <td>${doc.detalle}</td>
           <td>${estadoHTML}</td>
         `;
+
+        // Resaltar en rojo si faltan 7 días para vencer
+        const diferencia = Math.ceil((new Date(doc.fecha) - new Date()) / (1000 * 60 * 60 * 24));
+        if (diferencia <= 7 && diferencia >= 0) {
+          row.classList.add('alerta');
+        }
+
         tbody.appendChild(row);
       });
     }
