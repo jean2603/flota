@@ -63,15 +63,11 @@
     }
     .vigente {
       color: #155724;
-      background-color: #d4edda;
+      background-color: #d4edda00;
     }
     .vencido {
       color: #721c24;
-      background-color: #f8d7da;
-    }
-    .alerta {
-      background-color: #f8d7da !important;
-      color: #721c24 !important;
+      background-color: #f8d7da02;
     }
     .nav {
       text-align: center;
@@ -91,6 +87,11 @@
     .btn-salir:hover {
       background-color: #a30000;
     }
+
+    /* Nuevas clases por vencimiento */
+    .rojo { background-color: #f8d7da !important; }
+    .amarillo { background-color: #fff3cd !important; }
+    .verde { background-color: #d4edda !important; }
   </style>
 </head>
 <body>
@@ -115,7 +116,7 @@
       </tbody>
     </table>
     <div class="nav">
-      <a href="SCTR_Mayo.pdf" target="_blank" class="btn-salir">Descargar SCTR</a>
+      <a href="SCTR_Actual.pdf" target="_blank" class="btn-salir">Descargar SCTR</a>
     </div>    
     <div class="nav">
       <a href="index.html" class="btn-salir">Salir</a>
@@ -187,25 +188,33 @@
         return;
       }
 
-      // Ordenar documentos por fecha de vencimiento
       documentos.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
 
       documentos.forEach(doc => {
+        const fechaVenc = new Date(doc.fecha);
+        const hoy = new Date();
+        const diferencia = Math.ceil((fechaVenc - hoy) / (1000 * 60 * 60 * 24));
+
+        let claseColor = '';
+        if (diferencia < 0) {
+          claseColor = 'rojo';
+        } else if (diferencia <= 7) {
+          claseColor = 'rojo';
+        } else if (diferencia <= 30) {
+          claseColor = 'amarillo';
+        } else {
+          claseColor = 'verde';
+        }
+
         const estadoHTML = calcularEstado(doc.fecha);
         const row = document.createElement('tr');
+        row.classList.add(claseColor);
         row.innerHTML = `
           <td>${doc.tipo}</td>
           <td>${doc.fecha}</td>
           <td>${doc.detalle}</td>
           <td>${estadoHTML}</td>
         `;
-
-        // Resaltar en rojo si faltan 7 días para vencer
-        const diferencia = Math.ceil((new Date(doc.fecha) - new Date()) / (1000 * 60 * 60 * 24));
-        if (diferencia <= 7 && diferencia >= 0) {
-          row.classList.add('alerta');
-        }
-
         tbody.appendChild(row);
       });
     }
