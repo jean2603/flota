@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Registro de Vehículos</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #bebebe;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #800000;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+    main {
+      padding: 2rem;
+      max-width: 800px;
+      margin: auto;
+    }
+    section {
+      margin-bottom: 2rem;
+    }
+    label {
+      display: block;
+      margin: 0.5rem 0 0.2rem;
+    }
+    input, select, textarea, button {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+    button {
+      background-color: #800000;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #a00000;
+    }
+    .nav {
+      margin-top: 2rem;
+      text-align: center;
+    }
+    .nav a {
+      background-color: #800000;
+      color: white;
+      padding: 0.5rem 1rem;
+      text-decoration: none;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Registro de Vehículos</h1>
+  </header>
+  <main>
+    <section>
+      <h2>Registrar Placa</h2>
+      <input type="text" id="placa" placeholder="Ingrese la placa del vehículo">
+      <button onclick="registrarPlaca()">Registrar Placa</button>
+    </section>
+
+    <section>
+      <h2>Registrar Documento</h2>
+      <label for="placaDoc">Seleccione Placa:</label>
+      <select id="placaDoc"></select>
+      <label for="tipo">Tipo de Documento:</label>
+      <input type="text" id="tipo" placeholder="Ej. SOAT, Revisión Técnica, etc..">
+      <label for="fecha">Fecha de Vencimiento:</label>
+      <input type="date" id="fecha">
+      <label for="detalle">Detalle:</label>
+      <textarea id="detalle" placeholder="Descripción adicional del documento"></textarea>
+      <button onclick="registrarDocumento()">Registrar Documento</button>
+    </section>
+
+    <div class="nav">
+      <a href="../Paginas/consulta.html">Ir a Consulta</a>
+    </div>
+  </main>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+
+  <script>
+    // Tu configuración de Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyD4jXuHsXsK2eP6wnWIpbyQ2oC-vWNLnn0",
+      authDomain: "flota-fcg.firebaseapp.com",
+      projectId: "flota-fcg",
+      storageBucket: "flota-fcg.firebasestorage.app",
+      messagingSenderId: "1028149868248",
+      appId: "1:1028149868248:web:95a63df6dcd1f4007f49ad",
+      measurementId: "G-YDSZTH1LXF"
+    };
+
+    // Inicializar Firebase y Firestore
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    async function registrarPlaca() {
+      const placa = document.getElementById('placa').value.toUpperCase().trim();
+      if (!placa) {
+        alert("Ingrese una placa válida");
+        return;
+      }
+
+      const doc = await db.collection("vehiculos").doc(placa).get();
+      if (doc.exists) {
+        alert("La placa ya está registrada");
+      } else {
+        await db.collection("vehiculos").doc(placa).set({ documentos: [] });
+        alert("Placa registrada con éxito");
+        actualizarSelectPlacas();
+      }
+
+      document.getElementById('placa').value = '';
+    }
+
+    async function registrarDocumento() {
+      const placa = document.getElementById('placaDoc').value;
+      const tipo = document.getElementById('tipo').value.trim();
+      const fecha = document.getElementById('fecha').value;
+      const detalle = document.getElementById('detalle').value.trim();
+
+      if (placa && tipo && fecha) {
+        const docRef = db.collection("vehiculos").doc(placa);
+        const doc = await docRef.get();
+        const datos = doc.data();
+        datos.documentos.push({ tipo, fecha, detalle });
+        await docRef.set(datos);
+        alert("Documento registrado correctamente");
+
+        document.getElementById('tipo').value = '';
+        document.getElementById('fecha').value = '';
+        document.getElementById('detalle').value = '';
+      } else {
+        alert("Complete todos los campos requeridos");
+      }
+    }
+
+    async function actualizarSelectPlacas() {
+      const select = document.getElementById('placaDoc');
+      select.innerHTML = '';
+      const snapshot = await db.collection("vehiculos").get();
+      snapshot.forEach(doc => {
+        const option = document.createElement('option');
+        option.value = doc.id;
+        option.textContent = doc.id;
+        select.appendChild(option);
+      });
+    }
+
+    window.onload = actualizarSelectPlacas;
+  </script>
+</body>
+</html>
+
+
+
