@@ -261,9 +261,8 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Estado para edición
     let placaActual = '';
-    let indexEditando = -1;
+    let indexEditando = -1; // ESTE será el índice ORIGINAL, no el del ordenado
 
     const iconPencil = `
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -292,11 +291,9 @@
     function calcularClaseColorPorFecha(fechaISO) {
       const fechaVenc = new Date(fechaISO);
       const hoy = new Date();
-      // Normalizar hoy a 00:00 para que el cálculo sea más estable
       hoy.setHours(0,0,0,0);
 
       const diferenciaDias = Math.ceil((fechaVenc - hoy) / (1000 * 60 * 60 * 24));
-
       if (diferenciaDias < 0) return 'rojo';
       if (diferenciaDias <= 7) return 'rojo';
       if (diferenciaDias <= 30) return 'amarillo';
@@ -321,17 +318,21 @@
         return;
       }
 
-      let documentos = docSnap.data().documentos || [];
+      const documentos = docSnap.data().documentos || [];
       if (documentos.length === 0) {
         tbody.innerHTML = '<tr><td colspan="4">No hay documentos registrados para esta placa</td></tr>';
         return;
       }
 
-      // Ordenar por fecha más próxima
-      documentos.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+      // ✅ Creamos una "vista" con el índice original
+      const vista = documentos.map((d, i) => ({ ...d, __origIndex: i }));
 
-      documentos.forEach((item, index) => {
+      // ✅ Ordenamos SOLO la vista
+      vista.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+      vista.forEach((item) => {
         const claseColor = calcularClaseColorPorFecha(item.fecha);
+        const origIndex = item.__origIndex; // 👈 este es el que usaremos para editar/eliminar
 
         const row = document.createElement('tr');
         row.classList.add(claseColor);
@@ -342,10 +343,10 @@
           <td>${item.detalle ?? ''}</td>
           <td>
             <div class="acciones">
-              <button class="icon-btn btn-edit" title="Editar" onclick="abrirModalEditar('${placaActual}', ${index})">
+              <button class="icon-btn btn-edit" title="Editar" onclick="abrirModalEditar('${placaActual}', ${origIndex})">
                 ${iconPencil}
               </button>
-              <button class="icon-btn btn-del" title="Eliminar" onclick="eliminarDocumento('${placaActual}', ${index})">
+              <button class="icon-btn btn-del" title="Eliminar" onclick="eliminarDocumento('${placaActual}', ${origIndex})">
                 ${iconTrash}
               </button>
             </div>
@@ -355,7 +356,7 @@
       });
     }
 
-    async function eliminarDocumento(placa, index) {
+    async function eliminarDocumento(placa, origIndex) {
       const ok = confirm("¿Seguro que deseas eliminar este documento?");
       if (!ok) return;
 
@@ -363,7 +364,7 @@
       const docSnap = await docRef.get();
       const documentos = (docSnap.data().documentos || []);
 
-      documentos.splice(index, 1);
+      documentos.splice(origIndex, 1);
 
       await docRef.set({ documentos }, { merge: true });
 
@@ -371,10 +372,9 @@
       mostrarDocumentos();
     }
 
-    // --- MODAL EDICIÓN ---
-    async function abrirModalEditar(placa, index) {
+    async function abrirModalEditar(placa, origIndex) {
       placaActual = placa;
-      indexEditando = index;
+      indexEditando = origIndex; // ✅ Guardamos el índice ORIGINAL
 
       const docRef = db.collection("vehiculos").doc(placa);
       const docSnap = await docRef.get();
@@ -387,7 +387,6 @@
       }
 
       document.getElementById('editTipo').value = item.tipo ?? '';
-      // Debe ser YYYY-MM-DD para input date (asumo que tu fecha ya está así)
       document.getElementById('editFecha').value = item.fecha ?? '';
       document.getElementById('editDetalle').value = item.detalle ?? '';
 
@@ -429,7 +428,6 @@
       mostrarDocumentos();
     }
 
-    // Cerrar modal al hacer clic fuera
     document.getElementById('modalOverlay').addEventListener('click', (e) => {
       if (e.target.id === 'modalOverlay') cerrarModal();
     });
